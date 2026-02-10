@@ -1,138 +1,75 @@
 ---
 name: adversarial-review
 description: >
-  Get an independent second opinion from a separate AI model.
-  Use when the user asks for "second opinion", "adversarial review",
-  "independent review", or "codex review" on code, specs, diffs, PRs,
-  or GitHub issues.
-argument-hint: "[target] [--backend codex|claude|bedrock] [--model name] [--quick]"
-allowed-tools: Bash(codex *), Bash(claude *), Bash(gh *), Bash(git diff*), Bash(git log*), Bash(git status*), Bash(uv run*), Read, Grep, Glob
-disable-model-invocation: true
+  Get an independent second opinion from a separate AI model on code, specs,
+  diffs, PRs, or GitHub issues. Use when the user asks for "second opinion",
+  "adversarial review", "independent review", or "codex review". Supports
+  codex (GPT family), claude -p, and AWS Bedrock backends.
+  Arguments: [target] [--backend codex|claude|bedrock] [--model name] [--quick]
+allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gh:*) Bash(git:*) Bash(uv:*) Read Grep Glob
 ---
 
-Get an independent second opinion on code, specs, diffs, or issues from a separate AI model.
+Independent second opinion from a separate AI model.
 
-## Phase 1: Detect Target
+## Workflow
 
-Parse `$ARGUMENTS` to determine what to review:
+### 1. Detect Target
 
-- **File path(s)** (e.g., `src/main.py`, `lib/*.ts`) → code/spec review
-- **`diff` or `changes`** → review uncommitted changes via `git diff`
-- **`#N` or GitHub issue URL** → issue review via `gh issue view`
-- **PR URL or `PR #N`** → PR review via `gh pr view` and `gh pr diff`
-- **No arguments** → ask the user what to review using AskUserQuestion
+Parse `$ARGUMENTS`:
 
-Extract flags from arguments:
-- `--backend codex|claude|bedrock` → explicit backend choice
-- `--model <name>` → explicit model override
-- `--quick` → skip Understanding section in output
+- File path(s) → code review
+- `diff` / `changes` → `git diff` review
+- `#N` or issue URL → `gh issue view` review
+- PR URL or `PR #N` → `gh pr view` + `gh pr diff` review
+- No args → ask user via AskUserQuestion
 
-## Phase 2: Reconnaissance
+Extract flags: `--backend`, `--model`, `--quick`.
 
-Before sending anything to the reviewer, gather context yourself:
+### 2. Reconnaissance
 
-1. **Read the target**:
-   - For files: read each target file
-   - For diffs: run `git diff` (unstaged) and `git diff --cached` (staged)
-   - For PRs: run `gh pr diff <number>` and `gh pr view <number>`
-   - For issues: run `gh issue view <number>` including comments
+Gather context before building the review prompt:
 
-2. **Identify related context** the reviewer should know about:
-   - Check imports/dependencies of target files
-   - Find related test files (glob for `test_*`, `*_test.*`, `*.spec.*`)
-   - Read project README or CLAUDE.md if they exist (for project conventions)
-   - For diffs/PRs: identify which modules are affected
+1. Read the target (files, diff, issue, or PR)
+2. Identify related files (imports, tests, config) and project context (README, CLAUDE.md)
+3. Assemble a 2-5 sentence context summary: what the project does, what the target accomplishes, key related files
 
-3. **Assemble a context summary** (2-5 sentences):
-   - What the project does
-   - What the target code/change is trying to accomplish
-   - Key files the reviewer should examine
+### 3. Select Backend
 
-## Phase 3: Select Backend and Model
+Priority: explicit `--backend` flag > auto-detect.
 
-**Priority**: explicit `--backend` flag > auto-detect availability.
+Auto-detect: try `codex` (`which codex`) → `bedrock` (script exists) → `claude` (fallback).
 
-**Auto-detect order**:
-1. `codex` — check if `codex` CLI is available (`which codex`)
-2. `bedrock` — check if wrapper script exists at the expected path
-3. `claude` — fallback, always available (uses `claude -p`)
+Default models: codex=`o4-mini`, claude=`sonnet`, bedrock=`eu.anthropic.claude-sonnet-4-5-20250929-v1:0`. Override with `--model`.
 
-**Default models per backend**:
+### 4. Build Review Prompt
 
-| Backend | Default model |
-|---------|--------------|
-| codex | `o4-mini` |
-| claude | `sonnet` |
-| bedrock | `eu.anthropic.claude-sonnet-4-5-20250929-v1:0` |
+Read [references/review-prompt.md](references/review-prompt.md) and substitute placeholders:
 
-If `--model` is provided, use it for the selected backend.
+- `{{CONTENT_TYPE}}` → code, spec, diff, issue, pr
+- `{{REVIEW_TARGET}}` → file paths or inline content
+- `{{CONTEXT}}` → project/architectural context from step 2
+- `{{MODE}}` → `full` (default) or `quick` (if `--quick` flag or user said "delegate"/"just review")
+- `{{GUIDANCE}}` → focus areas, related test files, key dependencies
 
-## Phase 4: Detect Review Mode
+Write assembled prompt to `/tmp/ar-prompt-$$.md`.
 
-- Default: **full mode** (include Understanding section in output)
-- If `--quick` flag is present, or the user said "delegate"/"skip understanding"/"just review": **quick mode**
+### 5. Execute Review
 
-## Phase 5: Build Review Prompt
+Capture git state before (`git diff --stat`), then run:
 
-Read the prompt template from `review-prompt.md` (located in the same directory as this SKILL.md).
+- **codex**: `codex exec "$(cat /tmp/ar-prompt-$$.md)" --sandbox read-only --model <model>` (use stdin for prompts >100KB)
+- **claude**: `claude -p "$(cat /tmp/ar-prompt-$$.md)" --model <model> --output-format text`
+- **bedrock**: `uv run scripts/bedrock-review.py /tmp/ar-prompt-$$.md --model <model> --region eu-west-1`
 
-Substitute these placeholders in the template:
+After execution, run `git diff --stat && git status --short`. If any new changes appear, flag immediately.
 
-| Placeholder | Value |
-|-------------|-------|
-| `{{CONTENT_TYPE}}` | `code`, `spec`, `diff`, `issue`, or `pr` |
-| `{{REVIEW_TARGET}}` | For files: file paths + instruction to read them. For diffs/issues/PRs: the actual inline content. |
-| `{{CONTEXT}}` | Project description, related file paths, architectural notes from Phase 2 |
-| `{{MODE}}` | `full` or `quick` |
-| `{{GUIDANCE}}` | Specific areas to focus on, related test files, key dependencies |
+### 6. Present Results
 
-Write the assembled prompt to a temp file at `/tmp/ar-prompt-$$.md`.
+Output verbatim as:
 
-## Phase 6: Execute Review
-
-**IMPORTANT**: Before executing, capture current git state:
-```bash
-git rev-parse HEAD 2>/dev/null
-git diff --stat 2>/dev/null
 ```
-
-Run the review based on selected backend:
-
-| Backend | Command |
-|---------|---------|
-| codex | `codex exec "$(cat /tmp/ar-prompt-$$.md)" --sandbox read-only --model <model>` |
-| claude | `claude -p "$(cat /tmp/ar-prompt-$$.md)" --model <model> --output-format text` |
-| bedrock | `uv run skills/adversarial-review/scripts/bedrock-review.py /tmp/ar-prompt-$$.md --model <model> --region eu-west-1` |
-
-**If the prompt is very large** (the temp file exceeds 100KB), for codex backend use stdin instead:
-```bash
-codex exec --sandbox read-only --model <model> < /tmp/ar-prompt-$$.md
-```
-
-**Post-execution safety check** (for all backends):
-```bash
-git diff --stat
-git status --short
-```
-If ANY uncommitted changes appear that weren't there before, **immediately flag this to the user** and show what changed. Do NOT silently continue.
-
-## Phase 7: Present Results
-
-Output the reviewer's response verbatim inside a clearly labeled section:
-
-```markdown
 ## Independent Review (via [backend] / [model])
-
-[reviewer's full response here]
+[full response]
 ```
 
-**Rules for presenting results**:
-- Do NOT editorialize, soften, or rephrase the review
-- Do NOT apologize for harsh findings
-- If you (Claude) genuinely disagree with a specific finding, add a brief labeled note AFTER the full review:
-  ```
-  > **Claude's note on [finding]**: [brief disagreement with reasoning]
-  ```
-- If the review was in quick mode, note this: "*(Quick mode — Understanding section omitted)*"
-
-Clean up: remove the temp prompt file.
+Do NOT editorialize or soften. If you disagree with a finding, add a labeled note after the full review. Clean up temp file.
