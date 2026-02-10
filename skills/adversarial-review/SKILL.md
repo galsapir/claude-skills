@@ -100,13 +100,13 @@ Run the review based on selected backend:
 
 | Backend | Command |
 |---------|---------|
-| codex | `codex exec "$(cat /tmp/ar-prompt-$$.md)" --full-auto --sandbox read-only --model <model>` |
+| codex | `codex exec "$(cat /tmp/ar-prompt-$$.md)" --sandbox read-only --model <model>` |
 | claude | `claude -p "$(cat /tmp/ar-prompt-$$.md)" --model <model> --output-format text` |
 | bedrock | `uv run skills/adversarial-review/scripts/bedrock-review.py /tmp/ar-prompt-$$.md --model <model> --region eu-west-1` |
 
 **If the prompt is very large** (the temp file exceeds 100KB), for codex backend use stdin instead:
 ```bash
-codex exec --full-auto --sandbox read-only --model <model> < /tmp/ar-prompt-$$.md
+codex exec --sandbox read-only --model <model> < /tmp/ar-prompt-$$.md
 ```
 
 **Post-execution safety check** (for all backends):
