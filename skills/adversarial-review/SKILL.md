@@ -31,7 +31,8 @@ Gather context before building the review prompt:
 
 1. Read the target (files, diff, issue, or PR)
 2. Identify related files (imports, tests, config) and project context (README, CLAUDE.md)
-3. Assemble a 2-5 sentence context summary: what the project does, what the target accomplishes, key related files
+3. Determine the project stage: scan the target and project docs for signals like "POC", "MVP", "prototype", "v1", "production", "beta". Default to "unknown" if no clear signal. This becomes `{{STAGE}}`
+4. Assemble a 2-5 sentence context summary: what the project does, what the target accomplishes, key related files
 
 ### 3. Select Backend
 
@@ -48,6 +49,7 @@ Read [references/review-prompt.md](references/review-prompt.md) and substitute p
 - `{{CONTENT_TYPE}}` → code, spec, diff, issue, pr
 - `{{REVIEW_TARGET}}` → file paths or inline content
 - `{{CONTEXT}}` → project/architectural context from step 2
+- `{{STAGE}}` → project stage from step 2 (e.g. POC, MVP, production, unknown)
 - `{{MODE}}` → `full` (default) or `quick` (if `--quick` flag or user said "delegate"/"just review")
 - `{{GUIDANCE}}` → focus areas, related test files, key dependencies
 
