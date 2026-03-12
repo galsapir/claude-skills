@@ -50,6 +50,16 @@ Gets an independent second opinion on code, specs, diffs, or GitHub issues from 
 
 **Output structure**: Executive Summary (SHIP/ITERATE/RETHINK verdict), Understanding (full mode), Findings (severity + confidence rated), Strengths, Questions for Author.
 
+## Migrating from the old install
+
+If you previously installed with `/install-plugin galsapir/claude-skills`, remove the old plugin first:
+
+```
+/plugin uninstall gal-skills
+```
+
+Then follow the [Install](#install) instructions above.
+
 ## Prerequisites
 
 - **Codex backend**: `npm install -g @openai/codex` + `codex auth`
