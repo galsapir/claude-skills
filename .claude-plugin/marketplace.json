@@ -1,0 +1,22 @@
+{
+  "name": "gal-skills",
+  "owner": {
+    "name": "Gal Sapir"
+  },
+  "metadata": {
+    "description": "Claude Code skills for project interviews and independent code reviews",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "interview",
+      "source": "./plugins/interview",
+      "category": "productivity"
+    },
+    {
+      "name": "adversarial-review",
+      "source": "./plugins/adversarial-review",
+      "category": "code-quality"
+    }
+  ]
+}

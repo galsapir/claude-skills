@@ -1,8 +1,18 @@
 # claude-skills
 
-Personal Claude Code skills collection by [Gal Sapir](https://github.com/galsapir).
+Personal Claude Code plugin marketplace by [Gal Sapir](https://github.com/galsapir).
 
-## Skills
+## Install
+
+Add the marketplace and install the plugins you want:
+
+```
+/plugin marketplace add galsapir/claude-skills
+/plugin install interview@gal-skills
+/plugin install adversarial-review@gal-skills
+```
+
+## Plugins
 
 ### `/interview` — Project Interview
 
@@ -27,24 +37,18 @@ Gets an independent second opinion on code, specs, diffs, or GitHub issues from 
 /adversarial-review #42                                   # review GitHub issue
 /adversarial-review PR #7                                 # review pull request
 /adversarial-review src/main.py --quick                   # skip Understanding section
-/adversarial-review src/main.py --model gpt-5.3-codex    # explicit model
+/adversarial-review src/main.py --model gpt-5.4          # explicit model
 ```
 
 **Backends**:
 
-| Backend | Models | Notes |
-|---------|--------|-------|
-| `codex` | `o4-mini` (default), `gpt-5.3-codex`, `gpt-5.2-codex` | Most orthogonal — different model family |
-| `claude` | `sonnet` (default), any Claude Code model | Same family, fresh context |
-| `bedrock` | Claude Sonnet 4.5 (default), Haiku 4.5 | Same family via AWS; extensible to Llama/Nova/Mistral |
+| Backend | Default Model | Notes |
+|---------|---------------|-------|
+| `codex` | `gpt-5.4` | Most orthogonal — different model family |
+| `claude` | `sonnet` | Same family, fresh context |
+| `bedrock` | `claude-sonnet-4-6` | Same family via AWS; extensible to Llama/Nova/Mistral |
 
 **Output structure**: Executive Summary (SHIP/ITERATE/RETHINK verdict), Understanding (full mode), Findings (severity + confidence rated), Strengths, Questions for Author.
-
-## Install
-
-```
-/install-plugin galsapir/claude-skills
-```
 
 ## Prerequisites
 

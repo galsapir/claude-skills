@@ -39,7 +39,7 @@ Priority: explicit `--backend` flag > auto-detect.
 
 Auto-detect: try `codex` (`which codex`) → `bedrock` (script exists) → `claude` (fallback).
 
-Default models: codex=`gpt-5.3-codex`, claude=`sonnet`, bedrock=`eu.anthropic.claude-sonnet-4-5-20250929-v1:0`. Override with `--model`.
+Default models: codex=`gpt-5.4`, claude=`sonnet`, bedrock=`eu.anthropic.claude-sonnet-4-6-v1:0`. Override with `--model`.
 
 ### 4. Build Review Prompt
 
