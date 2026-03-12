@@ -1,0 +1,10 @@
+{
+  "name": "adversarial-review",
+  "version": "1.0.0",
+  "description": "Independent second opinion from a separate AI model on code, specs, diffs, PRs, or GitHub issues",
+  "author": {
+    "name": "Gal Sapir"
+  },
+  "license": "MIT",
+  "keywords": ["review", "adversarial", "second-opinion", "code-review"]
+}

@@ -16,7 +16,7 @@ def main() -> int:
     parser.add_argument("prompt_file", help="Path to the prompt markdown file")
     parser.add_argument(
         "--model",
-        default="eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        default="eu.anthropic.claude-sonnet-4-6",
         help="Bedrock model ID",
     )
     parser.add_argument("--region", default="eu-west-1", help="AWS region")

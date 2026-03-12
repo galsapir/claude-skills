@@ -1,0 +1,10 @@
+{
+  "name": "interview",
+  "version": "1.0.0",
+  "description": "Deep project interview that produces actionable specs before implementation begins",
+  "author": {
+    "name": "Gal Sapir"
+  },
+  "license": "MIT",
+  "keywords": ["interview", "spec", "planning", "requirements"]
+}
