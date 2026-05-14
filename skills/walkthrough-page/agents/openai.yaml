@@ -1,0 +1,4 @@
+interface:
+  display_name: "Walkthrough Page"
+  short_description: "Turn Markdown into polished walkthrough HTML"
+  default_prompt: "Use $walkthrough-page to turn this Markdown or concept into a polished static HTML walkthrough."

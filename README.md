@@ -14,6 +14,7 @@ This installs all skills from the repository. To install a specific skill:
 
 ```
 npx skills add galsapir/skills --skill interview
+npx skills add galsapir/skills --skill walkthrough-page
 npx skills add galsapir/skills --skill adversarial-review
 npx skills add galsapir/skills --skill ubiquitous-language
 ```
@@ -37,6 +38,18 @@ Deep project interview with two modes. **Discovery mode** uncovers requirements 
 "interview me about adding dark mode to settings"
 "grill me on this plan: path/to/plan.md"
 "use the interview skill to stress-test my architecture doc"
+```
+
+### `walkthrough-page` - Markdown-to-HTML Walkthrough Builder
+
+Turns Markdown, source files, or a short interview into a polished static HTML walkthrough page with copyable commands, diagrams, checkpoints, and validation.
+
+```
+"use walkthrough-page to make an onboarding page for this repo"
+"build a nice HTML walkthrough from docs/onboarding.md"
+"turn this markdown into a polished static page"
+"turn this CLI workflow into a copyable web walkthrough"
+"make a one-page concept explainer for the evaluation pipeline"
 ```
 
 ### `adversarial-review` — Independent Second Opinion
@@ -84,6 +97,13 @@ This repository follows the [Agent Skills specification](https://agentskills.io/
 skills/
   interview/
     SKILL.md              # Skill metadata + instructions
+  walkthrough-page/
+    SKILL.md              # Interview + static walkthrough workflow
+    assets/
+      walkthrough-template.html
+    scripts/
+      markdown_inventory.py
+      validate_page.py
   adversarial-review/
     SKILL.md              # Skill metadata + instructions
     references/
