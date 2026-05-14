@@ -123,6 +123,33 @@ Read [docs](docs/onboarding.md).
             ],
         )
 
+    def test_markdown_inventory_treats_dashes_after_list_item_as_hr(self) -> None:
+        import tempfile
+
+        markdown_inventory = load_script("markdown_inventory")
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "walkthrough.md"
+            source.write_text(
+                "# Title\n"
+                "\n"
+                "- [x] some item\n"
+                "---\n"
+                "\n"
+                "Next paragraph.\n",
+                encoding="utf-8",
+            )
+
+            inventory = markdown_inventory.inventory_markdown(source)
+
+        self.assertEqual(
+            inventory["headings"],
+            [{"level": 1, "text": "Title", "line": 1}],
+        )
+        self.assertEqual(
+            inventory["checklist_items"],
+            [{"checked": True, "text": "some item", "line": 3}],
+        )
+
     def test_validate_page_rejects_template_placeholders(self) -> None:
         import tempfile
 

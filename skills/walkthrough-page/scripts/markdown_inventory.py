@@ -13,6 +13,7 @@ from typing import Any
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 SETEXT_RE = re.compile(r"^(=+|-+)\s*$")
 FENCE_RE = re.compile(r"^(```|~~~)([A-Za-z0-9_+.-]*)\s*$")
+LIST_ITEM_RE = re.compile(r"^\s*([-*+]|\d+\.)\s+")
 CHECKLIST_RE = re.compile(r"^\s*[-*]\s+\[([ xX])\]\s+(.+?)\s*$")
 LINK_RE = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
 
@@ -94,7 +95,7 @@ def inventory_markdown(path: Path) -> dict[str, Any]:
             index += 1
             continue
 
-        if line.strip() and index + 1 < len(lines):
+        if line.strip() and index + 1 < len(lines) and not LIST_ITEM_RE.match(line):
             setext_match = SETEXT_RE.match(lines[index + 1])
             if setext_match:
                 headings.append(
