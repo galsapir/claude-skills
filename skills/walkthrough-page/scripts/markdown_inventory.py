@@ -11,7 +11,8 @@ from typing import Any
 
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
-FENCE_RE = re.compile(r"^```([A-Za-z0-9_+.-]*)\s*$")
+SETEXT_RE = re.compile(r"^(=+|-+)\s*$")
+FENCE_RE = re.compile(r"^(```|~~~)([A-Za-z0-9_+.-]*)\s*$")
 CHECKLIST_RE = re.compile(r"^\s*[-*]\s+\[([ xX])\]\s+(.+?)\s*$")
 LINK_RE = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
 
@@ -40,36 +41,45 @@ def inventory_markdown(path: Path) -> dict[str, Any]:
     links: list[dict[str, Any]] = []
 
     in_code = False
+    code_fence = ""
     code_language = ""
     code_start = 0
     code_lines: list[str] = []
 
-    for index, line in enumerate(lines, start=1):
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        line_number = index + 1
         fence_match = FENCE_RE.match(line)
         if fence_match and not in_code:
             in_code = True
-            code_language = fence_match.group(1)
-            code_start = index
+            code_fence = fence_match.group(1)
+            code_language = fence_match.group(2)
+            code_start = line_number
             code_lines = []
+            index += 1
             continue
 
-        if fence_match and in_code:
+        if fence_match and in_code and fence_match.group(1) == code_fence:
             code_blocks.append(
                 {
                     "language": code_language,
                     "line_start": code_start,
-                    "line_end": index,
+                    "line_end": line_number,
                     "preview": preview_code(code_lines),
                 }
             )
             in_code = False
+            code_fence = ""
             code_language = ""
             code_start = 0
             code_lines = []
+            index += 1
             continue
 
         if in_code:
             code_lines.append(line)
+            index += 1
             continue
 
         heading_match = HEADING_RE.match(line)
@@ -78,9 +88,24 @@ def inventory_markdown(path: Path) -> dict[str, Any]:
                 {
                     "level": len(heading_match.group(1)),
                     "text": clean_inline_markdown(heading_match.group(2).rstrip("# ")),
-                    "line": index,
+                    "line": line_number,
                 }
             )
+            index += 1
+            continue
+
+        if line.strip() and index + 1 < len(lines):
+            setext_match = SETEXT_RE.match(lines[index + 1])
+            if setext_match:
+                headings.append(
+                    {
+                        "level": 1 if setext_match.group(1).startswith("=") else 2,
+                        "text": clean_inline_markdown(line),
+                        "line": line_number,
+                    }
+                )
+                index += 2
+                continue
 
         checklist_match = CHECKLIST_RE.match(line)
         if checklist_match:
@@ -88,7 +113,7 @@ def inventory_markdown(path: Path) -> dict[str, Any]:
                 {
                     "checked": checklist_match.group(1).lower() == "x",
                     "text": clean_inline_markdown(checklist_match.group(2)),
-                    "line": index,
+                    "line": line_number,
                 }
             )
 
@@ -97,9 +122,10 @@ def inventory_markdown(path: Path) -> dict[str, Any]:
                 {
                     "text": clean_inline_markdown(link_match.group(1)),
                     "url": link_match.group(2),
-                    "line": index,
+                    "line": line_number,
                 }
             )
+        index += 1
 
     title = next((heading["text"] for heading in headings if heading["level"] == 1), "")
     return {

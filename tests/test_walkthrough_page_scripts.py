@@ -82,6 +82,47 @@ Read [docs](docs/onboarding.md).
             [{"text": "docs", "url": "docs/onboarding.md", "line": 14}],
         )
 
+    def test_markdown_inventory_handles_setext_tilde_fences_and_crlf(self) -> None:
+        import tempfile
+
+        markdown_inventory = load_script("markdown_inventory")
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "walkthrough.md"
+            source.write_text(
+                "Project onboarding\r\n"
+                "==================\r\n"
+                "\r\n"
+                "Run it\r\n"
+                "------\r\n"
+                "\r\n"
+                "~~~bash\r\n"
+                "uv run tool\r\n"
+                "~~~\r\n",
+                encoding="utf-8",
+            )
+
+            inventory = markdown_inventory.inventory_markdown(source)
+
+        self.assertEqual(inventory["title"], "Project onboarding")
+        self.assertEqual(
+            inventory["headings"],
+            [
+                {"level": 1, "text": "Project onboarding", "line": 1},
+                {"level": 2, "text": "Run it", "line": 4},
+            ],
+        )
+        self.assertEqual(
+            inventory["code_blocks"],
+            [
+                {
+                    "language": "bash",
+                    "line_start": 7,
+                    "line_end": 9,
+                    "preview": "uv run tool",
+                }
+            ],
+        )
+
     def test_validate_page_rejects_template_placeholders(self) -> None:
         import tempfile
 
@@ -108,7 +149,101 @@ ABOUTME: Demonstrates validation failure.
 
         self.assertIn("template title was not replaced", errors)
         self.assertIn("copy button points at missing id: missing", errors)
-        self.assertIn("placeholder text remains: Replace with", errors)
+        self.assertIn("template placeholder remains: Walkthrough Page Template", errors)
+
+    def test_validate_page_accepts_legitimate_todo_and_replace_text(self) -> None:
+        import tempfile
+
+        validate_page = load_script("validate_page")
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "index.html"
+            page.write_text(
+                """<!--
+ABOUTME: Example walkthrough page.
+ABOUTME: Documents a real command workflow.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maintenance walkthrough</title>
+</head>
+<body>
+  <section><h2>Model</h2><p>TODO: keep this note because it is part of the source code.</p></section>
+  <section><h2>Run</h2><pre><code id="cmd">sed 's/foo/bar/' file.txt</code></pre><button data-copy-for="cmd">Copy</button></section>
+  <section><h2>Artifacts</h2><p>Replace this string with a configured value when running locally.</p></section>
+</body>
+</html>
+""",
+                encoding="utf-8",
+            )
+
+            errors = validate_page.validate_page(page)
+
+        self.assertEqual(errors, [])
+
+    def test_validate_page_detects_template_command_placeholder(self) -> None:
+        import tempfile
+
+        validate_page = load_script("validate_page")
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "index.html"
+            page.write_text(
+                """<!--
+ABOUTME: Example walkthrough page.
+ABOUTME: Demonstrates template placeholder detection.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project walkthrough</title>
+</head>
+<body>
+  <section><h2>Model</h2></section>
+  <section><h2>Run</h2><pre><code id="cmd">replace-with-real-command --help</code></pre><button data-copy-for="cmd">Copy</button></section>
+  <section><h2>Artifacts</h2></section>
+</body>
+</html>
+""",
+                encoding="utf-8",
+            )
+
+            errors = validate_page.validate_page(page)
+
+        self.assertIn("template placeholder remains: replace-with-real-command", errors)
+
+    def test_validate_page_accepts_aboutme_in_first_html_comment_after_long_head(self) -> None:
+        import tempfile
+
+        validate_page = load_script("validate_page")
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "index.html"
+            page.write_text(
+                f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project walkthrough</title>
+  <style>{'x' * 900}</style>
+</head>
+<!--
+ABOUTME: Example walkthrough page.
+ABOUTME: Keeps page metadata in the first HTML comment.
+-->
+<body>
+  <section><h2>Model</h2></section>
+  <section><h2>Run</h2><pre><code id="cmd">uv run tool --help</code></pre><button data-copy-for="cmd">Copy</button></section>
+  <section><h2>Artifacts</h2></section>
+</body>
+</html>
+""",
+                encoding="utf-8",
+            )
+
+            errors = validate_page.validate_page(page)
+
+        self.assertEqual(errors, [])
 
     def test_validate_page_accepts_complete_static_page(self) -> None:
         import tempfile

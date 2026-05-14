@@ -11,14 +11,21 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 
-PLACEHOLDER_PATTERNS = (
-    "{{",
-    "}}",
-    "[TODO",
-    "TODO:",
-    "replace-with-real",
-    "Replace with",
-    "Replace this",
+FIRST_COMMENT_RE = re.compile(r"<!--(?P<body>.*?)-->", re.DOTALL)
+ABOUTME_RE = re.compile(r"ABOUTME:\s+\S.*\n\s*ABOUTME:\s+\S", re.MULTILINE)
+TEMPLATE_PLACEHOLDERS = (
+    "Walkthrough Page Template",
+    "Replace this with the concept, workflow, or onboarding promise.",
+    "State who this is for, what they will understand, and what they can copy or run from this page.",
+    "Show the few nouns, stages, or decisions the reader must keep in their head.",
+    "replace-with-real-command",
+    "Replace with output captured from a real run, or label it as example output.",
+    "What it owns, why it exists, and what breaks if it is wrong.",
+    "How it connects to the next stage. Link to exact files when useful.",
+    "What the reader should expect to see and where to inspect it.",
+    "Name the success signal: a file, metric, UI state, log line, or artifact.",
+    "Name one realistic failure mode and the fastest root-cause check.",
+    "Replace this footer with links to source docs, next steps, or ownership notes.",
 )
 
 
@@ -65,6 +72,14 @@ class WalkthroughParser(HTMLParser):
             self.facts.title += data.strip()
 
 
+def has_aboutme_header(text: str) -> bool:
+    search_window = text[:4096]
+    first_comment = FIRST_COMMENT_RE.search(search_window)
+    if first_comment and ABOUTME_RE.search(first_comment.group("body").strip()):
+        return True
+    return bool(ABOUTME_RE.search(text[:2048]))
+
+
 def validate_page(path: Path) -> list[str]:
     errors: list[str] = []
     if not path.exists():
@@ -77,8 +92,8 @@ def validate_page(path: Path) -> list[str]:
     parser.feed(text)
     facts = parser.facts
 
-    if not re.search(r"ABOUTME: .+\nABOUTME: .+", text[:700]):
-        errors.append("missing two ABOUTME lines near the top")
+    if not has_aboutme_header(text):
+        errors.append("missing two ABOUTME lines in the first HTML comment or page header")
     if "<!doctype html>" not in text[:200].lower():
         errors.append("missing <!doctype html> near the top")
     if not facts.title:
@@ -102,9 +117,9 @@ def validate_page(path: Path) -> list[str]:
     if facts.code_ids and not facts.copy_targets:
         errors.append("code blocks exist but no copy buttons were found")
 
-    for pattern in PLACEHOLDER_PATTERNS:
-        if pattern in text:
-            errors.append(f"placeholder text remains: {pattern}")
+    for placeholder in TEMPLATE_PLACEHOLDERS:
+        if placeholder in text:
+            errors.append(f"template placeholder remains: {placeholder}")
 
     return errors
 

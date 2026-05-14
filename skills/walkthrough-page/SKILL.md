@@ -113,7 +113,7 @@ The template includes:
 - An inspector pattern for "click a node, read its role".
 - Accessibility and mobile defaults.
 
-Replace the sample content completely. Keep only the structural patterns that serve the user's topic.
+Replace every sample string before validating. The template is intentionally invalid until adapted; run `validate_page.py` on the derived page, not on `assets/walkthrough-template.html`. Keep only the structural patterns that serve the user's topic.
 
 ## Markdown Inventory Script
 
