@@ -14,6 +14,7 @@ This installs all skills from the repository. To install a specific skill:
 
 ```
 npx skills add galsapir/skills --skill interview
+npx skills add galsapir/skills --skill long-horizon
 npx skills add galsapir/skills --skill walkthrough-page
 npx skills add galsapir/skills --skill adversarial-review
 npx skills add galsapir/skills --skill ubiquitous-language
@@ -38,6 +39,16 @@ Deep project interview with two modes. **Discovery mode** uncovers requirements 
 "interview me about adding dark mode to settings"
 "grill me on this plan: path/to/plan.md"
 "use the interview skill to stress-test my architecture doc"
+```
+
+### `long-horizon` — Long-Running Agent Prompt Wrapper
+
+Turns a draft prompt into a long-horizon coding-agent task prompt. Adds scaffolding for autonomous progress, background subagents, and an `implementation-notes.html` decision trail.
+
+```
+"use long-horizon on this draft prompt: ..."
+"make this a long-horizon task"
+"/long-horizon turn this into a prompt i can hand to codex"
 ```
 
 ### `walkthrough-page` - Markdown-to-HTML Walkthrough Builder
@@ -97,6 +108,8 @@ This repository follows the [Agent Skills specification](https://agentskills.io/
 skills/
   interview/
     SKILL.md              # Skill metadata + instructions
+  long-horizon/
+    SKILL.md              # Prompt wrapper for long-running agent tasks
   walkthrough-page/
     SKILL.md              # Interview + static walkthrough workflow
     assets/

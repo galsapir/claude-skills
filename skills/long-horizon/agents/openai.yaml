@@ -1,0 +1,6 @@
+# ABOUTME: Defines UI metadata for the long-horizon skill.
+# ABOUTME: Supplies display text and the default invocation prompt.
+interface:
+  display_name: "Long Horizon"
+  short_description: "Turn drafts into long-running agent prompts"
+  default_prompt: "Use $long-horizon to turn this draft into a long-running coding-agent task prompt."
