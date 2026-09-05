@@ -56,6 +56,30 @@ class SkillCatalogTests(unittest.TestCase):
         self.assertIn("Open questions", skill)
         self.assertIn("subagents", skill)
 
+    def test_paper_to_illustrated_video_skill_is_catalogued_and_installable(self) -> None:
+        readme = read_text(ROOT / "README.md")
+        skill_dir = ROOT / "skills" / "paper-to-illustrated-video"
+        skill = read_text(skill_dir / "SKILL.md")
+        openai_yaml = read_text(skill_dir / "agents" / "openai.yaml")
+
+        self.assertIn("npx skills add galsapir/skills --skill paper-to-illustrated-video", readme)
+        self.assertIn("### `paper-to-illustrated-video`", readme)
+        self.assertEqual(frontmatter_value(skill, "name"), "paper-to-illustrated-video")
+        self.assertIn('display_name: "Paper to Illustrated Video"', openai_yaml)
+        self.assertIn("$paper-to-illustrated-video", openai_yaml)
+        for bundled in ("assets/render_template.py", "scripts/check_video.py",
+                        "references/script-checkpoint.md", "references/pitfalls.md"):
+            self.assertTrue((skill_dir / bundled).exists(), bundled)
+
+    def test_paper_to_illustrated_video_skill_contains_workflow_contract(self) -> None:
+        skill = read_text(ROOT / "skills" / "paper-to-illustrated-video" / "SKILL.md")
+
+        self.assertIn("Script checkpoint", skill)
+        self.assertIn("claim_problems()", skill)
+        self.assertIn("Technical guide, not trailer", skill)
+        self.assertIn("faststart", skill)
+        self.assertIn("Do not merge unless asked", skill)
+
 
 if __name__ == "__main__":
     unittest.main()
