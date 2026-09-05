@@ -18,6 +18,7 @@ npx skills add galsapir/skills --skill long-horizon
 npx skills add galsapir/skills --skill walkthrough-page
 npx skills add galsapir/skills --skill adversarial-review
 npx skills add galsapir/skills --skill ubiquitous-language
+npx skills add galsapir/skills --skill paper-to-illustrated-video
 ```
 
 ## Update
@@ -100,6 +101,18 @@ Extracts a DDD-style ubiquitous language glossary from the current conversation.
 "let's harden the terminology for this project"
 ```
 
+### `paper-to-illustrated-video` — Paper to Illustrated Video
+
+Turns a paper or benchmark release into one short silent announcement video (20-35 s, square, mobile-legible) that reads like a technical guide to the paper. Script checkpoint first, then a deterministic Pillow renderer with ffmpeg encoding, data-backed claim checks, an MP4 contract checker, contact sheet, poster, provenance, tests, and a PR.
+
+```
+"use paper-to-illustrated-video to make the X video for this preprint"
+"turn figure 3 and the results tables into a 30-second illustrated video"
+"paper in 30 seconds, no URL, sentence case"
+```
+
+Bundled: `assets/render_template.py` (renderer skeleton), `scripts/check_video.py` (MP4 box parser + claims + provenance checks), `references/script-checkpoint.md` (beat table, voice rules, worked example), `references/pitfalls.md`.
+
 ## Repository Structure
 
 This repository follows the [Agent Skills specification](https://agentskills.io/specification):
@@ -125,6 +138,15 @@ skills/
       bedrock-review.py   # AWS Bedrock backend script
   ubiquitous-language/
     SKILL.md              # Skill metadata + instructions
+  paper-to-illustrated-video/
+    SKILL.md              # Script checkpoint + renderer + checks workflow
+    assets/
+      render_template.py  # Deterministic Pillow renderer skeleton
+    scripts/
+      check_video.py      # MP4 contract, claims, and provenance checker
+    references/
+      script-checkpoint.md
+      pitfalls.md
 ```
 
 Each skill is a self-contained directory with a `SKILL.md` file containing YAML frontmatter (`name`, `description`, and optional fields) followed by Markdown instructions.

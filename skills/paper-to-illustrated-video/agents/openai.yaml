@@ -1,0 +1,6 @@
+# ABOUTME: Defines UI metadata for the paper-to-illustrated-video skill.
+# ABOUTME: Supplies display text and the default invocation prompt.
+interface:
+  display_name: "Paper to Illustrated Video"
+  short_description: "Turn a paper into a short, reproducible, technical-guide video"
+  default_prompt: "Use $paper-to-illustrated-video to turn this paper and its figures into a short silent announcement video with a script checkpoint, data-backed claims, and an MP4 contract check."
